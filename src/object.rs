@@ -1,6 +1,6 @@
 use core::fmt;
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub enum Object {
   Void,
   Integer(i64),
