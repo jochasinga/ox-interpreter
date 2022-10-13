@@ -2,78 +2,84 @@ use core::fmt;
 
 #[derive(PartialEq, Debug, Clone)]
 pub enum Token {
-  Integer(i64),
-  Float(f64),
-  Symbol(String),
-  String(String),
-  LParen,
-  RParen,
+    Integer(i64),
+    Float(f64),
+    Symbol(String),
+    String(String),
+    LParen,
+    RParen,
+    Lambda,
 }
 
 impl fmt::Display for Token {
-  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-    match self {
-      Token::Integer(n) => write!(f, "{}", n),
-      Token::Float(n) => write!(f, "{}", n),
-      Token::Symbol(s) => write!(f, "{}", s),
-      Token::String(s) => write!(f, "{}", s),
-      Token::LParen => write!(f, "("),
-      Token::RParen => write!(f, ")")
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Token::Integer(n) => write!(f, "{}", n),
+            Token::Float(n) => write!(f, "{}", n),
+            Token::Symbol(s) => write!(f, "{}", s),
+            Token::String(s) => write!(f, "{}", s),
+            Token::LParen => write!(f, "("),
+            Token::RParen => write!(f, ")"),
+            Token::Lambda => write!(f, "lambda"),
+        }
     }
-  }
 }
 
 pub fn tokenize(input: &str) -> Vec<Token> {
-  let mut chars = input.chars().into_iter();
-  let mut tokens: Vec<Token> = Vec::new();
+    let mut chars = input.chars().into_iter();
+    let mut tokens: Vec<Token> = Vec::new();
 
-  while let Some(c) = chars.next() {
-      match c {
-          ' ' | '\n' => {
-              continue;
-          },
-          '(' => tokens.push(Token::LParen),
-          ')' => tokens.push(Token::RParen),
-          '"' => {
-              let mut s: Vec<char> = Vec::new();
-              while let Some(cc) = chars.next() {
-                  if cc == '"' {
-                      tokens.push(Token::String(s.into_iter().collect()));
-                      break;
-                  }
-                  s.push(cc);
-              }
-          },
-          c => {
-              let mut tok: Vec<char> = Vec::new();
-              tok.push(c);
-              while let Some(cc) = chars.next() {
-                  if vec![' ', ')'].contains(&cc) {
-                      let word: String = tok.iter().collect();
-                      let i = word.parse::<i64>();
-                      if i.is_ok() {
-                          tokens.push(Token::Integer(i.unwrap()));
-                      } else {
-                          let i = word.parse::<f64>();
-                          if i.is_ok() {
-                              tokens.push(Token::Float(i.unwrap()));
-                          } else {
-                              tokens.push(Token::Symbol(word.to_string()));
-                          }
-                      }
-                      if cc == ')' {
-                          tokens.push(Token::RParen);
-                      }
-                      break;
-                  } else {
-                      tok.push(cc);
-                  }
-              }
-          }
-      }
-  }
+    while let Some(c) = chars.next() {
+        match c {
+            ' ' | '\n' => {
+                continue;
+            }
+            '(' => tokens.push(Token::LParen),
+            ')' => tokens.push(Token::RParen),
+            '"' => {
+                let mut s: Vec<char> = Vec::new();
+                while let Some(cc) = chars.next() {
+                    if cc == '"' {
+                        tokens.push(Token::String(s.into_iter().collect()));
+                        break;
+                    }
+                    s.push(cc);
+                }
+            }
+            c => {
+                let mut tok: Vec<char> = Vec::new();
+                tok.push(c);
+                while let Some(cc) = chars.next() {
+                    if vec![' ', ')'].contains(&cc) {
+                        let word: String = tok.iter().collect();
+                        if word == "lambda" {
+                            tokens.push(Token::Lambda);
+                            break;
+                        }
+                        let i = word.parse::<i64>();
+                        if i.is_ok() {
+                            tokens.push(Token::Integer(i.unwrap()));
+                        } else {
+                            let i = word.parse::<f64>();
+                            if i.is_ok() {
+                                tokens.push(Token::Float(i.unwrap()));
+                            } else {
+                                tokens.push(Token::Symbol(word.to_string()));
+                            }
+                        }
+                        if cc == ')' {
+                            tokens.push(Token::RParen);
+                        }
+                        break;
+                    } else {
+                        tok.push(cc);
+                    }
+                }
+            }
+        }
+    }
 
-  tokens
+    tokens
 }
 
 #[cfg(test)]
@@ -115,6 +121,27 @@ mod tests {
                 Token::Symbol("+".to_string()),
                 Token::Integer(1),
                 Token::Integer(2),
+                Token::RParen,
+            ]
+        );
+    }
+
+    #[test]
+    fn test_lambda() {
+        let tokens = tokenize("(lambda (x) (* 2 x))");
+        assert_eq!(
+            tokens,
+            vec![
+                Token::LParen,
+                Token::Lambda,
+                Token::LParen,
+                Token::Symbol("x".to_string()),
+                Token::RParen,
+                Token::LParen,
+                Token::Symbol("*".to_string()),
+                Token::Integer(2),
+                Token::Symbol("x".to_string()),
+                Token::RParen,
                 Token::RParen,
             ]
         );
