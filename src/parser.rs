@@ -73,7 +73,13 @@ fn parse_list(
             parse_list(tokens, list)
         }
         Token::Symbol(s) => {
-            list.push(Object::Symbol(s));
+            if s == "#t".to_string() {
+                list.push(Object::Bool(true))
+            } else if s == "#f".to_string() {
+                list.push(Object::Bool(false))
+            } else {
+                list.push(Object::Symbol(s));
+            }
             parse_list(tokens, list)
         }
         Token::String(s) => {
@@ -82,7 +88,7 @@ fn parse_list(
         }
         Token::RParen => Ok((Object::List(list), tokens)),
         Token::LParen => {
-            let (sub, tokens_) = parse_list(tokens.clone(), Vec::<Object>::new())?;
+            let (sub, tokens_) = parse_list(tokens, Vec::<Object>::new())?;
             list.push(sub);
             parse_list(tokens_, list)
         }
@@ -104,6 +110,19 @@ mod tests {
                 Object::Integer(1),
                 Object::Integer(2),
             ])
+        );
+    }
+
+    #[test]
+    fn test_booleans() {
+        let list = parse("(and #t #f)").unwrap();
+        assert_eq!(
+            list,
+            Object::List(vec![
+                Object::Symbol("and".to_string()),
+                Object::Bool(true),
+                Object::Bool(false),
+            ]),
         );
     }
 

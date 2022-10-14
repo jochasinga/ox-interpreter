@@ -148,6 +148,21 @@ mod tests {
     }
 
     #[test]
+    fn test_bool() {
+        let program = "(#t #f)";
+        let tokens = tokenize(program);
+        assert_eq!(
+            tokens,
+            vec![
+                Token::LParen,
+                Token::Symbol("#t".to_string()),
+                Token::Symbol("#f".to_string()),
+                Token::RParen,
+            ]
+        );
+    }
+
+    #[test]
     fn test_area_of_circle() {
         let program = "
             (
